@@ -17,17 +17,19 @@ io.on('connection', (client) => {
         client.join(data.sala);
 
         usuarios.agregarPersona(client.id, data.nombre, data.sala);
+        client.broadcast.to(data.sala).emit('crearMensaje', crearMensaje('Administrador', `${data.nombre} entro`));
         client.broadcast.to(data.sala).emit('listaPersonas', usuarios.obtenerPersonasSala(data.sala));
         callback(usuarios.obtenerPersonasSala(data.sala));
     });
-    client.on('crearMensaje', (data) => {
+    client.on('crearMensaje', (data, callback) => {
         let persona = usuarios.obtenerPersona(client.id);
         let mensaje = crearMensaje(persona.nombre, data.mensaje);
         client.broadcast.to(persona.sala).emit('crearMensaje', mensaje);
+        callback(mensaje)
     });
     client.on('disconnect', () => {
         let personaBorrada = usuarios.borrarPersona(client.id);
-        client.broadcast.to(personaBorrada.sala).emit('crearMensaje', crearMensaje('Administrador', `El usuario ${personaBorrada.nombre} ha abandonado la sala`));
+        client.broadcast.to(personaBorrada.sala).emit('crearMensaje', crearMensaje('Administrador', `${personaBorrada.nombre} salio`));
         client.broadcast.to(personaBorrada.sala).emit('listaPersonas', usuarios.obtenerPersonasSala(personaBorrada.sala));
     });
 
